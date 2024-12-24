@@ -3,13 +3,15 @@ import { dia, shapes } from "jointjs";
 
 const DiagramEditor = ({ setGraph }) => {
   const graphRef = useRef(null);
-  const paperRef = useRef(null);
+  const paperRef = useRef(null); // Ref for the DOM element
+  const paperInstance = useRef(null); // Ref for the JointJS Paper instance
   const [counter, setCounter] = useState(1);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(1); // Current scale factor
+
   const [className, setClassName] = useState("");
   const [attributes, setAttributes] = useState([]);
   const [methods, setMethods] = useState([]);
-  const [visibility, setVisibility] = useState("public"); // Class visibility state
+  const [visibility, setVisibility] = useState("public");
   const [sourceClass, setSourceClass] = useState("");
   const [targetClass, setTargetClass] = useState("");
   const [relationshipType, setRelationshipType] = useState("Association");
@@ -27,6 +29,7 @@ const DiagramEditor = ({ setGraph }) => {
       gridSize: 10,
       drawGrid: true,
     });
+    paperInstance.current = paper; // Save the Paper instance in a ref
 
     return () => graph.clear();
   }, [setGraph]);
@@ -40,9 +43,9 @@ const DiagramEditor = ({ setGraph }) => {
     const umlClass = new shapes.uml.Class({
       position: { x: 100 + counter * 30, y: 100 + counter * 20 },
       size: { width: 200, height: 100 },
-      name: `${visibility} ${className}`, // Visibility is part of the class declaration
-      attributes: attributes.map((attr) => `${attr.trim()}`), // Clean up the + symbol
-      methods: methods.map((method) => `${method.trim()}`), // Clean up the + symbol
+      name: `${visibility} ${className}`,
+      attributes: attributes.map((attr) => `${attr.trim()}`),
+      methods: methods.map((method) => `${method.trim()}`),
     });
 
     graphRef.current.addCell(umlClass);
@@ -92,10 +95,14 @@ const DiagramEditor = ({ setGraph }) => {
   };
 
   const zoom = (factor) => {
-    const newScale = scale + factor;
-    if (newScale >= 0.5 && newScale <= 2) {
-      paperRef.current.scale(newScale, newScale);
-      setScale(newScale);
+    if (paperInstance.current) {
+      const newScale = scale + factor;
+      if (newScale >= 0.5 && newScale <= 2) {
+        paperInstance.current.scale(newScale, newScale); // Apply scale to Paper instance
+        setScale(newScale); // Update the scale state
+      } else {
+        alert("Zoom level must be between 0.5 and 2.");
+      }
     }
   };
 
@@ -208,7 +215,7 @@ const DiagramEditor = ({ setGraph }) => {
       </div>
 
       <div
-        ref={paperRef}
+        ref={paperRef} // DOM reference for the Paper container
         style={{
           border: "1px solid #ccc",
           marginTop: "10px",
